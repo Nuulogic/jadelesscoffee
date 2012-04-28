@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+var fs = require('fs'),
+    path = require('path'),
+    program = require('commander'),
+    jadelesscoffee = require('jadelesscoffee');
+
+var options = {};
+
+program
+  .version(jadelesscoffee.version)
+  .usage('sourcedir')
+  .option('-O, --out <dir>', 'output the compiled files to <dir>')
+  .option('-w, --watch', 'watch the source directory and output to the destination directory on file changes')
+  .option('-i, --incremental', 'Saves a .jlc file in the source directory and uses it to do incremental compiling -- only compiling the files that have changed')
+
+program.on('--help', function(){
+  console.log('  Examples:');
+  console.log('');
+  console.log('    # compile to output');
+  console.log('    $ jadelesscoffee -O ./build ./src');
+  console.log('');
+  console.log('    # watch and compile output');
+  console.log('    $ jadelesscoffee --watch -O ./build ./src');
+  console.log('');
+});
+
+options = program.parse(process.argv);
+
+var sourceDirectory = (program.args.length > 0) ? program.args[0] : null;
+
+if (!options.out) {
+    throw "--out <dir> is required. Compiled files must have an output directory.";
+}
+
+if (!sourceDirectory) {
+    throw "<sourcedir> is required. Source files are required to output compiled files.";
+}
+
+if (options.watch) {
+    var watcher = new jadelesscoffee.Watcher(sourceDirectory, options.out, (options.incremental != undefined));
+} else {
+    var compiler = new jadelesscoffee.Compiler(sourceDirectory, options.out, (options.incremental != undefined));
+    compiler.compile(sourceDirectory);
+    console.log("Compiled " + compiler.compileCount + ' files and output to ' + options.out);
+}
