@@ -14,6 +14,8 @@ JadeLessCoffee is *not* meant for a production environment. Not at all. In order
 Just to make sure you understand why: **It's slow.**
 These tools are meant to make development faster, but with the added benefit of not slowing down the final product in the browser or on the server.
 
+Also of importance: This system hasn't been tested on windows. It *should* work. But... I don't know.
+
 
 Requirements
 ------------
@@ -42,7 +44,16 @@ To work on a project that has no dynamic server-side technology (as in no django
 - Compile the files out to html, css, and js by running `jlc --incremental --output <./build> ./src`
 - OR Watch the files so that any time there are changes they are output to the build folder: `jlc --incremental --watch --output <./build> ./src`
 
-To integrate with django
+Some important notes:
+jlc output folder will mimic the src folder structure. So if you have a `src/css/styles.less` file, it will be output to `build/css/styles.css`.
+jlc **overwrites** files. If you have an existing file with the same name and folder structure in your output, then jlc will eat it.
+jlc creates folders in your output directory. 
+
+
+Integration
+-----------
+
+To integrate with Django:
 
 TODO: Add Django middleware that will do an incremental recompile on HttpRequest. 
 
