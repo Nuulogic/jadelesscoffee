@@ -58,4 +58,4 @@ To integrate with Django:
 TODO: Add Django middleware that will do an incremental recompile on HttpRequest. 
 
 To integrate with php-based frameworks
-Put this into the index.php or any file that is included on every request: `exec "jlc --incremental --output $buildDirectory $sourceDirectory"`
+Put this into the index.php or any file that is included on every request: `exec("jlc --incremental --output $buildDirectory $sourceDirectory");`
