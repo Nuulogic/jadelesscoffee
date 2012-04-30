@@ -43,7 +43,14 @@ if (options.watch) {
 } else {
     jadelesscoffee.Compiler.silent = options.quiet;
     var compiler = new jadelesscoffee.Compiler(sourceDirectory, options.out, (options.incremental != undefined));
-    compiler.compile(sourceDirectory);
+    try {
+        compiler.compile(sourceDirectory);
+    }
+    catch (error) {
+        if (!jadelesscoffee.Compiler.silent) {
+            console.log(error);
+        }
+    }
     if (!jadelesscoffee.Compiler.silent)
         console.log("Compiled " + compiler.compileCount + ' files and output to ' + options.out);
 }
