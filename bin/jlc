@@ -41,8 +41,8 @@ if (!sourceDirectory) {
 if (options.watch) {
     var watcher = new jadelesscoffee.Watcher(sourceDirectory, options.out, (options.incremental != undefined));
 } else {
-    var compiler = new jadelesscoffee.Compiler(sourceDirectory, options.out, (options.incremental != undefined));
     jadelesscoffee.Compiler.silent = options.quiet;
+    var compiler = new jadelesscoffee.Compiler(sourceDirectory, options.out, (options.incremental != undefined));
     compiler.compile(sourceDirectory);
     if (!jadelesscoffee.Compiler.silent)
         console.log("Compiled " + compiler.compileCount + ' files and output to ' + options.out);
