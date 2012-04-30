@@ -13,6 +13,7 @@ program
   .option('-O, --out <dir>', 'output the compiled files to <dir>')
   .option('-w, --watch', 'watch the source directory and output to the destination directory on file changes')
   .option('-i, --incremental', 'Saves a .jlc file in the source directory and uses it to do incremental compiling -- only compiling the files that have changed')
+  .option('-q, --quiet', 'No output in compile mode. This option is not available with --watch')
 
 program.on('--help', function(){
   console.log('  Examples:');
@@ -41,6 +42,8 @@ if (options.watch) {
     var watcher = new jadelesscoffee.Watcher(sourceDirectory, options.out, (options.incremental != undefined));
 } else {
     var compiler = new jadelesscoffee.Compiler(sourceDirectory, options.out, (options.incremental != undefined));
+    jadelesscoffee.Compiler.silent = options.silent;
     compiler.compile(sourceDirectory);
-    console.log("Compiled " + compiler.compileCount + ' files and output to ' + options.out);
+    if (!jadelesscoffee.Compiler.silent)
+        console.log("Compiled " + compiler.compileCount + ' files and output to ' + options.out);
 }
