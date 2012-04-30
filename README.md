@@ -53,9 +53,23 @@ jlc creates folders in your output directory.
 Integration
 -----------
 
-To integrate with Django:
+*To integrate with Django:*
 
-TODO: Add Django middleware that will do an incremental recompile on HttpRequest. 
+`$ pip install git+https://github.com/Nuulogic/django-jadelesscoffee.git`
 
-To integrate with php-based frameworks
+Then in your Django application, include this middleware:
+`MIDDLEWARE_CLASSES = (
+    ...
+    'jadelesscoffee.django.middleware.JadeLessCoffeeMiddleware'
+)`
+
+Then add a 'src' folder in any of the TEMPLATE_DIRS and STATICFILES_DIRS entries you want to have .jade, .less, or .coffee files in.
+
+The following commands will run at each request and will only compile files that have changed.
+`jlc --quiet --incremental --output {{TEMPLATE_DIRS}}/src {{TEMPLATE_DIRS}}`
+`jlc --quiet --incremental --output {{STATICFILES_DIRS}}/src {{STATICFILES_DIRS}}`
+
+
+*To integrate with php-based frameworks:*
+
 Put this into the index.php or any file that is included on every request: `exec("jlc --incremental --output $buildDirectory $sourceDirectory");`
