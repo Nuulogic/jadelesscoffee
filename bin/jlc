@@ -14,6 +14,7 @@ program
   .option('-w, --watch', 'watch the source directory and output to the destination directory on file changes')
   .option('-i, --incremental', 'Saves a .jlc file in the source directory and uses it to do incremental compiling -- only compiling the files that have changed')
   .option('-q, --quiet', 'No output in compile mode. This option is not available with --watch')
+  .option('-V, --verbose', 'Opposite of --quiet. Say everything. A lot.')
 
 program.on('--help', function(){
   console.log('  Examples:');
@@ -38,11 +39,16 @@ if (!sourceDirectory) {
     throw "<sourcedir> is required. Source files are required to output compiled files.";
 }
 
+sourceDirectory = path.resolve(sourceDirectory);
+outputDirectory = path.resolve(options.out);
+
 if (options.watch) {
-    var watcher = new jadelesscoffee.Watcher(sourceDirectory, options.out, (options.incremental != undefined));
+    var watcher = new jadelesscoffee.Watcher(sourceDirectory, outputDirectory, (options.incremental != undefined));
 } else {
     jadelesscoffee.Compiler.silent = options.quiet;
-    var compiler = new jadelesscoffee.Compiler(sourceDirectory, options.out, (options.incremental != undefined));
+    jadelesscoffee.Compiler.verbose = options.verbose;
+
+    var compiler = new jadelesscoffee.Compiler(sourceDirectory, outputDirectory, (options.incremental != undefined));
     try {
         compiler.compile(sourceDirectory);
     }
@@ -52,5 +58,5 @@ if (options.watch) {
         }
     }
     if (!jadelesscoffee.Compiler.silent)
-        console.log("Compiled " + compiler.compileCount + ' files and output to ' + options.out);
+        console.log("Compiled " + compiler.compileCount + ' files and output to ' + outputDirectory);
 }
