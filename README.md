@@ -73,3 +73,20 @@ The following commands will run at each request and will only compile files that
 *To integrate with php-based frameworks:*
 
 Put this into the index.php or any file that is included on every request: `exec("jlc --incremental --output $buildDirectory $sourceDirectory");`
+
+
+Helpful/Useful
+--------------
+
+Jade syntax highlighting
+<https://github.com/miksago/jade-tmbundle>
+HTML2Jade bin is helpful sometimes too
+<https://github.com/donpark/html2jade>
+
+
+LESS syntax highlighting
+<https://github.com/creationix/LESS.tmbundle>
+
+
+CoffeeScript syntax highlighting
+<https://github.com/jashkenas/coffee-script-tmbundle>
