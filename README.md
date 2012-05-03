@@ -29,7 +29,7 @@ Installation
 ------------
 
 After installing node.js:
-`$ sudo npm -g install git+ssh://git@nuulogic.net:jadelesscoffee.git`
+`$ sudo npm -g install https://oliverseal@github.com/Nuulogic/jadelesscoffee.git`
 
 
 Usage
@@ -80,6 +80,7 @@ Helpful/Useful
 
 Jade syntax highlighting
 <https://github.com/miksago/jade-tmbundle>
+
 HTML2Jade bin is helpful sometimes too
 <https://github.com/donpark/html2jade>
 
