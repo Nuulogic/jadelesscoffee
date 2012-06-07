@@ -78,6 +78,9 @@ Put this into the index.php or any file that is included on every request: `exec
 Helpful/Useful
 --------------
 
+JadeLessCoffee Sublime Build system (uses a Makefile)
+<https://github.com/Nuulogic/JadeLessCoffee-sublime-build>
+
 Jade syntax highlighting
 <https://github.com/miksago/jade-tmbundle>
 
