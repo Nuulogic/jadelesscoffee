@@ -36,7 +36,7 @@ Installation
 ------------
 
 After installing node.js:
-`$ sudo npm -g install https://github.com/Nuulogic/jadelesscoffee.git`
+`$ sudo npm -g install git://github.com/Nuulogic/jadelesscoffee.git`
 
 
 Usage
