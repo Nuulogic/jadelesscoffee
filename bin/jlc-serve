@@ -137,10 +137,36 @@ function generateIndex(folderPath) {
     return indexHtml;
 }
 
+//linux console colors:
+var COLOR_BLACK     = '\u001b[30m',
+    COLOR_RED       = '\u001b[31m',
+    COLOR_GREEN     = '\u001b[32m',
+    COLOR_YELLOW    = '\u001b[33m',
+    COLOR_BLUE      = '\u001b[34m',
+    COLOR_MAGENTA   = '\u001b[35m',
+    COLOR_CYAN      = '\u001b[36m',
+    COLOR_WHITE     = '\u001b[37m',
+    COLOR_RESET     = '\u001b[0m';
+
 function logString(request, status, contentType, filePath) {
-    return [request.method, request.url, status.toString(), contentType, filePath].join(' ');
+    statusColor = COLOR_GREEN;
+    if (status >= 400)
+        statusColor = COLOR_RED;
+
+    contentColor = COLOR_BLUE;
+    if (contentType == 'text/javascript')
+        contentColor = COLOR_GREEN;
+    else if (contentType == 'text/css')
+        contentColor = COLOR_CYAN;
+    else if (contentType.indexOf('application') == 0)
+        contentColor = COLOR_YELLOW;
+    else if (contentType.indexOf('image') == 0)
+        contentColor = COLOR_MAGENTA;
+
+    return [request.method, request.url, statusColor, status.toString(), COLOR_RESET, contentColor, contentType, COLOR_RESET, filePath].join(' ');
 }
  
+
 http.createServer(function (request, response) {
     //borrowed from http://thecodinghumanist.com/blog/archives/2011/5/6/serving-static-files-from-node-js
 
@@ -150,14 +176,18 @@ http.createServer(function (request, response) {
     if (now - lastCompileTime > 2000) {
         for (var i = jlcCompilers.length - 1; i >= 0; i--) {
             try {
+                console.log(COLOR_RED);
                 var compiler = jlcCompilers[i];
                 compiler.compile();
                 if (i == jlcCompilers.length-1)
                     //only save the last compiler compile
                     lastCompileTime = new Date();
+                console.log(COLOR_RESET);
             }
             catch (err) {
-                console.error(err);
+                console.log(COLOR_RED);
+                console.log(err);
+                console.log(COLOR_RESET);
             }
         };
     }
