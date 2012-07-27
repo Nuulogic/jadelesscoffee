@@ -197,7 +197,7 @@ http.createServer(function (request, response) {
     if (filePath == './')
         filePath = './index.html';
          
-    var contentType = mime.lookup(request.url);
+    var contentType = mime.lookup(filePath);
      
     path.exists(filePath, function(exists) {
         if (exists) {
