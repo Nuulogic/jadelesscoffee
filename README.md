@@ -60,6 +60,31 @@ jlc creates folders in your output directory.
 Integration
 -----------
 
+*Static HTML Development / SimpleHTTPServer*
+
+If you're just doing static html development and want a quick and dirty way to build jade, less, and coffee, `jlc-serve` is an executable that will run a 
+simple HTTP server that compiles on every request (within a 2 second timespan to decrease machine load.) The server works best with 
+node-mime <https://github.com/broofa/node-mime>, but does not require it for basic functionality.
+
+`$ jlc-serve -O ./ ./src -p 8000`
+
+Example output:
+
+    Incremental compile started...
+    GET /lib/jadelesscoffee/fail 404 empty ./lib/jadelesscoffee/fail
+    GET /favicon.ico 404 empty ./favicon.ico
+    Incremental compile started...
+    GET /lib/jadelesscoffee 200 text/html ./lib/jadelesscoffee
+    GET /favicon.ico 404 empty ./favicon.ico
+    Incremental compile started...
+    GET /lib/jadelesscoffee 200 text/javascript ./lib/jadelesscoffee/index.js
+    GET /favicon.ico 404 empty ./favicon.ico
+    ^C
+
+Control+C to quit.
+
+
+
 *To integrate with Django:*
 
 `$ pip install git+https://github.com/Nuulogic/django-jadelesscoffee.git`

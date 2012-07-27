@@ -1,0 +1,210 @@
+#!/usr/bin/env node
+var http = require('http');
+var fs = require('fs');
+var path = require('path');
+var program = require('commander');
+var jadelesscoffee = require('jadelesscoffee');
+
+
+try {
+    var mime = require('mime');
+}
+catch (err) {
+    //lil fake minimalistic mime
+    var mime = {
+        types: {
+            'txt': 'text/plain',
+            'htm': 'text/html',
+            'html': 'text/html',
+            'js': 'text/javascript',
+            'css': 'text/css',
+            'jade': 'text/jade',
+            'less': 'text/less',
+            'coffee': 'text/coffeescript',
+            'bmp': 'image/bmp',
+            'gif': 'image/gif',
+            'jpeg': 'image/jpeg',
+            'jpg': 'image/jpeg',
+            'png': 'image/png',
+            'svg': 'image/svg+xml',
+            'svgz': 'image/svg+xml',
+            'tiff': 'image/tiff',
+            'tif': 'image/tiff',
+            'ico': 'image/x-icon',
+            'cur': 'image/x-icon',
+            'pdf': 'application/pdf',
+            'xml': 'text/xml',
+            'swf': 'application/x-shockwave-flash',
+            'flac': 'audio/flac',
+            'mp3': 'audio/mpeg',
+            'wav': 'audio/x-wav',
+            'otf': 'application/x-font-otf',
+            'ttf': 'application/x-font-ttf',
+            'pfa': 'application/x-font-type1',
+            'pfb': 'application/x-font-type1',
+            'pfm': 'application/x-font-type1',
+            'afm': 'application/x-font-type1',
+            'woff': 'application/x-font-woff',
+        },
+
+        lookup: function(path) {
+            var ext = path.replace(/.*[\.\/]/, '').toLowerCase();
+
+            return this.types[ext] || 'application/octet-stream';
+        }
+    }
+}
+
+var options = {};
+
+program
+  .version(jadelesscoffee.version)
+  .usage('sourcedir')
+  .option('-O, --out <dir>', 'output the compiled files to <dir>')
+  .option('-p, --port 8000', 'port the server should listen to; default is 8000')
+
+program.on('--help', function(){
+  console.log('  Examples:');
+  console.log('');
+  console.log('    # On every request runs an incremental compile on ./src directory and outputs to ./build .');
+  console.log('    $ jlc-server -O ./build ./src');
+  console.log('');
+  console.log('    # On every request runs an incremental compile on the array or source directories to their respective outputs.');
+  console.log('    $ jlc-server -O "./build ./templates ./static" ./src ./templates/src ./static/src');
+  console.log('');
+});
+
+options = program.parse(process.argv);
+
+var sourceDirectories = (program.args.length > 0) ? program.args : null;
+var outputDirectories = [];
+
+if (!options.out) {
+    throw "--out <dir> is required. Compiled files must have an output directory.";
+}
+
+if (!sourceDirectories) {
+    throw "<sourcedir> is required. Source files are required to output compiled files.";
+}
+
+var port = 8000;
+if (options.port && !isNaN(Number(options.port))) {
+    port = Number(options.port);
+}
+
+//if there is more than one source, there must be an equal number of outputs
+//preserve spaces
+outputDirectories = options.out.toString().replace(/\\ /g, '|s|').split(" ");
+if (outputDirectories.length != sourceDirectories.length) {
+    throw "<sourcedir> and <outputdir> must have matching quantities. " + sourceDirectories.length +  " sources provided. " + outputDirectories.length + " outputs provided.";
+}
+
+//normalize them paths
+for (var i = sourceDirectories.length - 1; i >= 0; i--) {
+    sourceDirectories[i] = path.resolve(sourceDirectories[i]);
+    outputDirectories[i] = path.resolve(outputDirectories[i].replace(/\|s\|/g, ' '));
+};
+
+var jlcCompilers = [];
+for (var i = sourceDirectories.length - 1; i >= 0; i--) {
+    var source = sourceDirectories[i];
+    var output = outputDirectories[i];
+
+    //always incremental
+    var compiler = new jadelesscoffee.Compiler(source, output, true);
+    jlcCompilers.push(compiler);
+};
+
+var lastCompileTime = 0;
+
+function generateIndex(folderPath) {
+    //index the files
+    var allFiles = fs.readdirSync(folderPath);
+    var indexHtml = '<html><head><body>\n\n';
+
+    indexHtml += "    <h1>Index of " + folderPath + "</h1>\n";
+    var len = allFiles.length;
+    for (var i = 0; i < len; i++) {
+        var fileName = allFiles[i];
+        if (folderPath.substr(-1, 1) == '/')
+            indexHtml += '        <a href="./' + fileName + '">' + fileName + '</a><br />\n';
+        else
+            indexHtml += '        <a href="/' + folderPath + '/' + fileName + '">' + fileName + '</a><br />\n';
+    };
+
+    indexHtml += '</body></head></html>';
+
+    return indexHtml;
+}
+
+function logString(request, status, contentType, filePath) {
+    return [request.method, request.url, status.toString(), contentType, filePath].join(' ');
+}
+ 
+http.createServer(function (request, response) {
+    //borrowed from http://thecodinghumanist.com/blog/archives/2011/5/6/serving-static-files-from-node-js
+
+    //we will run the jlc incrementally on every request using the provided directories;
+    var now = new Date();
+    //don't compile more than once every 2 seconds -- just because it's mean to the system
+    if (now - lastCompileTime > 2000) {
+        for (var i = jlcCompilers.length - 1; i >= 0; i--) {
+            try {
+                var compiler = jlcCompilers[i];
+                compiler.compile();
+                if (i == jlcCompilers.length-1)
+                    //only save the last compiler compile
+                    lastCompileTime = new Date();
+            }
+            catch (err) {
+                console.error(err);
+            }
+        };
+    }
+
+     
+    var filePath = '.' + request.url;
+    if (filePath == './')
+        filePath = './index.html';
+         
+    var contentType = mime.lookup(request.url);
+     
+    path.exists(filePath, function(exists) {
+        if (exists) {
+            fs.readFile(filePath, function(error, content) {
+                if (error) {
+                    var stat = fs.statSync(filePath);
+                    if (stat && stat.isDirectory()) {
+                        response.writeHead(200, {'Content-Type': 'text/html'});
+                        response.end(generateIndex(filePath), 'utf-8');
+                        console.log(logString(request, 200, 'text/html', filePath));
+                    }
+                    else {
+                        response.writeHead(500);
+                        response.end();
+                        console.log(logString(request, 500, 'empty', ''));
+                    }
+                }
+                else {
+                    response.writeHead(200, { 'Content-Type': contentType });
+                    response.end(content, 'utf-8');
+                    console.log(logString(request, 200, contentType, filePath));
+                }
+            });
+        }
+        else {
+            if (request.url == '/') {
+                response.writeHead(200, {'Content-Type': 'text/html'});
+                response.end(generateIndex('./'), 'utf-8');
+                console.log(logString(request, 200, 'text/html', './'));
+            } else {
+                response.writeHead(404);
+                response.end();
+                console.log(logString(request, 404, 'empty', filePath));
+            }
+        }
+    });
+     
+}).listen(port);
+ 
+console.log('Server running at http://127.0.0.1:' + port + '/');
