@@ -3,6 +3,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var program = require('commander');
+var static = require('node-static');
 var jadelesscoffee = require('jadelesscoffee');
 
 
@@ -169,30 +170,30 @@ function logString(request, status, contentType, filePath) {
 
 http.createServer(function (request, response) {
     //borrowed from http://thecodinghumanist.com/blog/archives/2011/5/6/serving-static-files-from-node-js
-
+    var fileServer = new static.Server('./');
     //we will run the jlc incrementally on every request using the provided directories;
     var now = new Date();
     //don't compile more than once every 2 seconds -- just because it's mean to the system
     if (now - lastCompileTime > 2000) {
         for (var i = jlcCompilers.length - 1; i >= 0; i--) {
             try {
-                console.log(COLOR_RED);
+                process.stdout.write(COLOR_RED);
                 var compiler = jlcCompilers[i];
                 compiler.compile();
                 if (i == jlcCompilers.length-1)
                     //only save the last compiler compile
                     lastCompileTime = new Date();
-                console.log(COLOR_RESET);
+                process.stdout.write(COLOR_RESET);
             }
             catch (err) {
-                console.log(COLOR_RED);
-                console.log(err);
-                console.log(COLOR_RESET);
+                console.log(COLOR_RED + err + COLOR_RESET);
             }
         };
     }
 
      
+    /** SWITCHED TO USING node-static 
+    
     var filePath = '.' + request.url;
     if (filePath == './')
         filePath = './index.html';
@@ -207,7 +208,6 @@ http.createServer(function (request, response) {
                     if (stat && stat.isDirectory()) {
                         response.writeHead(200, {'Content-Type': 'text/html'});
                         response.end(generateIndex(filePath), 'utf-8');
-                        console.log(logString(request, 200, 'text/html', filePath));
                     }
                     else {
                         response.writeHead(500);
@@ -233,7 +233,39 @@ http.createServer(function (request, response) {
                 console.log(logString(request, 404, 'empty', filePath));
             }
         }
-    });
+    });*/
+
+    
+    request.addListener('end', function() {
+        fileServer.serve(request, response, function(err, res){
+            if (err) {
+                if (err.status === 404) {
+                    var filePath = '.' + request.url;
+                    fs.exists(filePath, function(exists) {
+                        if (exists) {
+                            var stat = fs.statSync(filePath);
+                            if (stat && stat.isDirectory()) {
+                                response.writeHead(200, {'Content-Type': 'text/html'});
+                                response.end(generateIndex(filePath), 'utf-8');
+                            }
+                        }
+                        else {
+                            console.error(logString(request, err.status, 'text/html', err.message));
+                            response.writeHead(err.status, err.headers);
+                            response.end();
+                        }
+                    });
+                } else {
+                    console.error(logString(request, err.status, 'text/html', err.message));
+                    response.writeHead(err.status, err.headers);
+                    response.end();
+                }
+            } else {
+                console.log(logString(request, res.status, res.headers['Content-Type'], res.message));
+            }
+        });
+        //console.log(logString(request, 200, 'text/html', filePath));
+    })
      
 }).listen(port);
  
