@@ -2,6 +2,7 @@
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
+var urlParser = require('url');
 var program = require('commander');
 var static = require('node-static');
 var jadelesscoffee = require('jadelesscoffee');
@@ -155,14 +156,16 @@ function logString(request, status, contentType, filePath) {
         statusColor = COLOR_RED;
 
     contentColor = COLOR_BLUE;
-    if (contentType == 'text/javascript')
-        contentColor = COLOR_GREEN;
-    else if (contentType == 'text/css')
-        contentColor = COLOR_CYAN;
-    else if (contentType.indexOf('application') == 0)
-        contentColor = COLOR_YELLOW;
-    else if (contentType.indexOf('image') == 0)
-        contentColor = COLOR_MAGENTA;
+    if (contentType) {
+        if (contentType == 'text/javascript')
+            contentColor = COLOR_GREEN;
+        else if (contentType == 'text/css')
+            contentColor = COLOR_CYAN;
+        else if (contentType.indexOf('application') == 0)
+            contentColor = COLOR_YELLOW;
+        else if (contentType.indexOf('image') == 0)
+            contentColor = COLOR_MAGENTA;
+    }
 
     return [request.method, request.url, statusColor, status.toString(), COLOR_RESET, contentColor, contentType, COLOR_RESET, filePath].join(' ');
 }
@@ -191,80 +194,68 @@ http.createServer(function (request, response) {
         };
     }
 
-     
-    /** SWITCHED TO USING node-static 
-    
-    var filePath = '.' + request.url;
-    if (filePath == './')
-        filePath = './index.html';
-         
-    var contentType = mime.lookup(filePath);
-     
-    path.exists(filePath, function(exists) {
-        if (exists) {
-            fs.readFile(filePath, function(error, content) {
-                if (error) {
-                    var stat = fs.statSync(filePath);
-                    if (stat && stat.isDirectory()) {
-                        response.writeHead(200, {'Content-Type': 'text/html'});
-                        response.end(generateIndex(filePath), 'utf-8');
-                    }
-                    else {
-                        response.writeHead(500);
-                        response.end();
-                        console.log(logString(request, 500, 'empty', ''));
-                    }
+    request.addListener('end', function() {
+        //if the file is a css file and the querystring is webview
+        var url = urlParser.parse(request.url);
+        var filePath = '.' + url.pathname;
+        //force javascript to never be cached
+        var fileExtension = path.extname(filePath).slice(1).toLowerCase();
+        if (fileExtension == 'js' || fileExtension == 'css' || fileExtension == 'html') {
+            fs.exists(filePath, function(exists) {
+                var contentType = 'text/plain';
+                switch(fileExtension) {
+                    case 'js':
+                        contentType = 'text/javascript';
+                        break;
+                    case 'css': 
+                        contentType = 'text/css';
+                        break;
+                    case 'html':
+                        contentType = 'text/html';
+                        break;
                 }
-                else {
-                    response.writeHead(200, { 'Content-Type': contentType });
-                    response.end(content, 'utf-8');
-                    console.log(logString(request, 200, contentType, filePath));
+                
+                if (exists) {
+                    var nonCachedFile = fs.readFileSync(filePath);
+                    response.writeHead(200, {'Content-Type': contentType});
+                    response.end(nonCachedFile, 'utf-8');
+                    console.log(logString(request, 200, contentType, 'OK'));
+                } else {
+                    response.writeHead(404);
+                    response.end();
+                    console.log(logString(request, 404, contentType, 'Not Found'));
                 }
             });
-        }
-        else {
-            if (request.url == '/') {
-                response.writeHead(200, {'Content-Type': 'text/html'});
-                response.end(generateIndex('./'), 'utf-8');
-                console.log(logString(request, 200, 'text/html', './'));
-            } else {
-                response.writeHead(404);
-                response.end();
-                console.log(logString(request, 404, 'empty', filePath));
-            }
-        }
-    });*/
-
-    
-    request.addListener('end', function() {
-        fileServer.serve(request, response, function(err, res){
-            if (err) {
-                if (err.status === 404) {
-                    var filePath = '.' + request.url;
-                    fs.exists(filePath, function(exists) {
-                        if (exists) {
-                            var stat = fs.statSync(filePath);
-                            if (stat && stat.isDirectory()) {
-                                response.writeHead(200, {'Content-Type': 'text/html'});
-                                response.end(generateIndex(filePath), 'utf-8');
+        } else {
+            fileServer.serve(request, response, function(err, res){
+                if (err) {
+                    if (err.status === 404) {
+                        var filePath = '.' + request.url;
+                        fs.exists(filePath, function(exists) {
+                            if (exists) {
+                                var stat = fs.statSync(filePath);
+                                if (stat && stat.isDirectory()) {
+                                    response.writeHead(200, {'Content-Type': 'text/html'});
+                                    response.end(generateIndex(filePath), 'utf-8');
+                                }
                             }
-                        }
-                        else {
-                            console.error(logString(request, err.status, 'text/html', err.message));
-                            response.writeHead(err.status, err.headers);
-                            response.end();
-                        }
-                    });
+                            else {
+                                console.error(logString(request, err.status, 'text/html', err.message));
+                                response.writeHead(err.status, err.headers);
+                                response.end();
+                            }
+                        });
+                    } else {
+                        console.error(logString(request, err.status, 'text/html', err.message));
+                        response.writeHead(err.status, err.headers);
+                        response.end();
+                    }
                 } else {
-                    console.error(logString(request, err.status, 'text/html', err.message));
-                    response.writeHead(err.status, err.headers);
-                    response.end();
+                    console.log(logString(request, res.status, res.headers['Content-Type'], res.message));
                 }
-            } else {
-                console.log(logString(request, res.status, res.headers['Content-Type'], res.message));
-            }
-        });
-        //console.log(logString(request, 200, 'text/html', filePath));
+            });
+            //console.log(logString(request, 200, 'text/html', filePath));
+        }
     })
      
 }).listen(port);
