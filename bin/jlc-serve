@@ -5,7 +5,8 @@ var path = require('path');
 var urlParser = require('url');
 var program = require('commander');
 var static = require('node-static');
-var jadelesscoffee = require('jadelesscoffee');
+//var jadelesscoffee = require('jadelesscoffee');
+var jadelesscoffee = require('../');
 
 
 try {
@@ -113,7 +114,7 @@ for (var i = sourceDirectories.length - 1; i >= 0; i--) {
     var output = outputDirectories[i];
 
     //always incremental
-    var compiler = new jadelesscoffee.Compiler(source, output, true);
+    var compiler = new jadelesscoffee.Compiler(source, output, true, {html: true});
     jlcCompilers.push(compiler);
 };
 
@@ -170,26 +171,38 @@ function logString(request, status, contentType, filePath) {
     return [request.method, request.url, statusColor, status.toString(), COLOR_RESET, contentColor, contentType, COLOR_RESET, filePath].join(' ');
 }
  
-
+var errorHtml = null;
+var hasCompilerErrors = false;
 http.createServer(function (request, response) {
     //borrowed from http://thecodinghumanist.com/blog/archives/2011/5/6/serving-static-files-from-node-js
     var fileServer = new static.Server('./');
     //we will run the jlc incrementally on every request using the provided directories;
     var now = new Date();
+
     //don't compile more than once every 2 seconds -- just because it's mean to the system
     if (now - lastCompileTime > 2000) {
+        errorHtml = null;
+        hasCompilerErrors = false;
+        
         for (var i = jlcCompilers.length - 1; i >= 0; i--) {
             try {
                 process.stdout.write(COLOR_RED);
                 var compiler = jlcCompilers[i];
-                compiler.compile();
+                compiler.compile(undefined, undefined, function(filename, type, htmlErrorMessage) {
+                    //one error at a time please.
+                    if (hasCompilerErrors == false) {
+                        errorHtml = htmlErrorMessage;
+                        hasCompilerErrors = true;
+                    }
+                });
                 if (i == jlcCompilers.length-1)
                     //only save the last compiler compile
                     lastCompileTime = new Date();
                 process.stdout.write(COLOR_RESET);
             }
             catch (err) {
-                console.log(COLOR_RED + err + COLOR_RESET);
+                errorHtml = err;
+                //console.log(COLOR_RED + err + COLOR_RESET);
             }
         };
     }
@@ -200,7 +213,14 @@ http.createServer(function (request, response) {
         var filePath = '.' + url.pathname;
         //force javascript to never be cached
         var fileExtension = path.extname(filePath).slice(1).toLowerCase();
-        if (fileExtension == 'js' || fileExtension == 'css' || fileExtension == 'html') {
+
+        //first things first: if this is an error message, serve that html message
+        if (hasCompilerErrors == true && errorHtml != null && (fileExtension == 'html' || fileExtension == '')) {
+            response.writeHead(500, {'Content-Type': 'text/html'});
+            response.end(errorHtml, 'utf-8');
+            console.log(logString(request, 500, 'text/html', 'JadeLessCoffee Compiler error'));
+        }
+        else if (fileExtension == 'js' || fileExtension == 'css' || fileExtension == 'html') {
             fs.exists(filePath, function(exists) {
                 var contentType = 'text/plain';
                 switch(fileExtension) {

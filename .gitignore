@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+
+.jlchistory
+
+test/js
+test/css
+test/*.html
+test/node_modules
+node_modules

@@ -1,0 +1,22 @@
+doctype 5
+html
+    head
+        meta(http-equiv='Content-Type', content='text/html; charset=UTF-8')
+        meta(name='viewport',content='width=device-width, initial-scale=1.0')
+        //
+            Programmed using JadeLessCoffee https://github.com/Nuulogic/jadelesscoffee 
+        
+        title
+            block title
+        link(href='css/jlctest.css',rel='stylesheet')
+        script(type='text/javascript')
+            //declare jlctest in the global namespace
+            window.jlctest = {};
+
+        script(src='js/jlctest.js')
+        script
+            jlctest.STATIC_URL = '';
+
+    body
+        .container
+            block content

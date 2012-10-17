@@ -14,16 +14,18 @@ program
   .option('-w, --watch', 'watch the source directory and output to the destination directory on file changes')
   .option('-i, --incremental', 'Saves a .jlc file in the source directory and uses it to do incremental compiling -- only compiling the files that have changed')
   .option('-q, --quiet', 'No output in compile mode. This option is not available with --watch')
+  .option('-w, --html', 'Output html error pages instead of console errors')
+  .option('-u, --ugly', 'Turn off pretty printed results')
   .option('-V, --verbose', 'Opposite of --quiet. Say everything. A lot.')
 
 program.on('--help', function(){
   console.log('  Examples:');
   console.log('');
   console.log('    # compile to output');
-  console.log('    $ jadelesscoffee -O ./build ./src');
+  console.log('    $ jlc -O ./build ./src');
   console.log('');
   console.log('    # watch and compile output');
-  console.log('    $ jadelesscoffee --watch -O ./build ./src');
+  console.log('    $ jlc --watch -O ./build ./src');
   console.log('');
 });
 
@@ -47,8 +49,9 @@ if (options.watch) {
 } else {
     jadelesscoffee.Compiler.silent = options.quiet;
     jadelesscoffee.Compiler.verbose = options.verbose;
+    jadelesscoffee.Compiler.htmlErrors = options.html;
 
-    var compiler = new jadelesscoffee.Compiler(sourceDirectory, outputDirectory, (options.incremental != undefined));
+    var compiler = new jadelesscoffee.Compiler(sourceDirectory, outputDirectory, (options.incremental != undefined), options);
     try {
         compiler.compile(sourceDirectory);
     }
