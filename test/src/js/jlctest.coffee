@@ -7,7 +7,7 @@ jlctest = (if (window.jlctest?) then window.jlctest else {})
 # A wrapper for all the functionality.
 # There can be only *one* Application instance on a single page, since the url hash is
 # queried every half-second to determine the current location.
-# 
+#
 class jlctest.Application
     # jQuery: Container for the application html container.
     $container = null
@@ -26,7 +26,7 @@ class jlctest.Application
         @$container = $container
 
         @hashCheckIntervalId = setInterval()
-        
+
     onTimerTickCheckForHashChange: ->
         if @currentHash != window.location.hash
             hash = window.location.hash
