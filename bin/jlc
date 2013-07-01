@@ -14,9 +14,9 @@ program
   .option('-w, --watch', 'watch the source directory and output to the destination directory on file changes')
   .option('-i, --incremental', 'Saves a .jlc file in the source directory and uses it to do incremental compiling -- only compiling the files that have changed')
   .option('-q, --quiet', 'No output in compile mode. This option is not available with --watch')
-  .option('-m, --html', 'Output html error pages instead of console errors')
-  .option('-n, --maps', 'Generate source maps. Line numbers for Less, v3 maps for CoffeeScript.')
+  .option('-w, --html', 'Output html error pages instead of console errors')
   .option('-u, --ugly', 'Turn off pretty printed results')
+  .option('-p, --python', 'Format errors into a Python dict for use in a SyntaxError.')
   .option('-V, --verbose', 'Opposite of --quiet. Say everything. A lot.')
 
 program.on('--help', function(){
@@ -51,9 +51,6 @@ if (options.watch) {
     jadelesscoffee.Compiler.silent = options.quiet;
     jadelesscoffee.Compiler.verbose = options.verbose;
     jadelesscoffee.Compiler.htmlErrors = options.html;
-    jadelesscoffee.Compiler.maps = options.maps || true;
-    jadelesscoffee.Compiler.ugly = options.ugly || false;
-
 
     var compiler = new jadelesscoffee.Compiler(sourceDirectory, outputDirectory, (options.incremental != undefined), options);
     try {
