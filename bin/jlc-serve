@@ -207,7 +207,11 @@ http.createServer(function (request, response) {
         };
     }
 
-    request.addListener('end', function() {
+    request.on('readable', function() {
+        //this has to be here now? wtf nodejs.
+    });
+
+    request.on('end', function() {
         //if the file is a css file and the querystring is webview
         var url = urlParser.parse(request.url);
         var filePath = '.' + url.pathname;
