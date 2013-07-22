@@ -65,6 +65,7 @@ program
   .usage('sourcedir')
   .option('-O, --out <dir>', 'output the compiled files to <dir>')
   .option('-p, --port 8000', 'port the server should listen to; default is 8000')
+  .option('-n, --maps', 'render source maps for all the files')
 
 program.on('--help', function(){
   console.log('  Examples:');
@@ -114,7 +115,7 @@ for (var i = sourceDirectories.length - 1; i >= 0; i--) {
     var output = outputDirectories[i];
 
     //always incremental
-    var compiler = new jadelesscoffee.Compiler(source, output, true, {html: true});
+    var compiler = new jadelesscoffee.Compiler(source, output, true, {html: true, maps: options.maps});
     jlcCompilers.push(compiler);
 };
 
