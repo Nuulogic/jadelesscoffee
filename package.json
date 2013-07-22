@@ -5,10 +5,16 @@
   "keywords"      : ["css", "parser", "lesscss", "framework", "jade", "coffee", "html", "haml", "less"],
   "author"        : "Oliver Wilkerson <oliver.wilkerson@nuulogic.com>",
   "contributors"  : ["Matthew Wells <matthew.wells@nuulogic.com>", "Jeff Andrews <jeff.andrews@nuulogic.com>", "Chris Crowson <chris.crowson@nuulogic.com>"],
-  "version"       : "0.3.2",
+  "version"       : "0.3.3",
   "repository"    : "git://nuulogic.net/jadelesscoffee",
   "bin"           : { "jlc": "./bin/jlc", "jlc-serve": "./bin/jlc-serve" },
   "main"          : "lib/jadelesscoffee/index.js",
-  "dependencies"  : { "less": ">=1.3.0", "jade": ">=0.25.0", "coffee-script": ">=1.3.1", "mkdirp": "", "commander": "", "static": "git://github.com/cloudhead/node-static.git" },
+  "dependencies"  : { "less": ">=1.3.0",
+   "jade": ">=0.25.0",
+   "coffee-script": ">=1.3.1",
+   "mkdirp": "",
+   "commander": "",
+   "node-static": "" },
+
   "engines"       : { "node": ">=0.6.0" }
 }

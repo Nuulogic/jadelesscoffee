@@ -24,6 +24,7 @@ catch (err) {
             'jade': 'text/jade',
             'less': 'text/less',
             'coffee': 'text/coffeescript',
+            'map': 'text/plain',
             'bmp': 'image/bmp',
             'gif': 'image/gif',
             'jpeg': 'image/jpeg',
